@@ -45,6 +45,7 @@ class FocusSessionViewModel: ObservableObject {
 
     func stopSession() {
         timer?.invalidate()
+        lastRewardTime = 0
         guard let start = startTime, let mode = currentMode else { return }
         let session = FocusSession(mode: mode, startTime: start, duration: elapsedTime, points: points, badges: badges)
         sessionHistory.insert(session, at: 0)
