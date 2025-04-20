@@ -59,6 +59,8 @@ class FocusSessionViewModel: ObservableObject {
         }
     }
 
+    private var lastRewardTime: Int = 0
+
     private func updateTimer() {
         guard let start = startTime else { return }
         elapsedTime = Date().timeIntervalSince(start)
@@ -69,11 +71,15 @@ class FocusSessionViewModel: ObservableObject {
         formatter.allowedUnits = elapsedTime >= 3600 ? [.hour, .minute, .second] : [.minute, .second]
         timerText = formatter.string(from: elapsedTime) ?? "00:00"
 
-        if Int(elapsedTime) % 120 == 0 && Int(elapsedTime) != 0 {
+        let currentSeconds = Int(elapsedTime)
+        
+        if currentSeconds >= lastRewardTime + 120 {
             points += 1
             if let badge = badgeOptions.randomElement() {
                 badges.append(badge)
             }
+
+            lastRewardTime = (currentSeconds / 120) * 120
         }
     }
 }
