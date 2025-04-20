@@ -8,10 +8,14 @@
 import SwiftUI
 
 @main
-struct FocusProductivityAppApp: App {
+struct FocusProductivityApp: App {
+    @StateObject private var sessionVM = FocusSessionViewModel()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStack {
+                HomeView(sessionVM: sessionVM)
+            }
         }
     }
 }

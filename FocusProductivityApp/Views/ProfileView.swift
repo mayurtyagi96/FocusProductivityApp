@@ -9,44 +9,80 @@ import SwiftUI
 
 struct ProfileView: View {
     @ObservedObject var sessionVM: FocusSessionViewModel
-    let userName = "Rittwik Mondal"
+    let userName = "Mayur Kant Tyagi"
     let userImage = "person.circle"
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                Image(systemName: userImage)
-                    .resizable()
-                    .frame(width: 100, height: 100)
-                    .clipShape(Circle())
-                    .padding()
+            VStack(spacing: 28) {
+                VStack(spacing: 12) {
+                    Image(systemName: userImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 120, height: 120)
+                        .clipShape(Circle())
+                        .background(Circle().fill(Color.blue.opacity(0.2)))
+                        .padding(.top)
 
-                Text(userName)
-                    .font(.title2)
-                Text("Total Points: \(sessionVM.sessionHistory.reduce(0) { $0 + $1.points })")
+                    Text(userName)
+                        .font(.title.bold())
 
-                Text("Badges:")
-                Text(sessionVM.sessionHistory.flatMap { $0.badges }.joined(separator: " "))
-                    .font(.largeTitle)
+                    Text("Total Points: \(sessionVM.sessionHistory.reduce(0) { $0 + $1.points })")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
 
-                Text("Recent Sessions")
-                    .font(.headline)
-
-                ForEach(sessionVM.sessionHistory) { session in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(session.mode.displayName)
+                VStack(spacing: 16) {
+                    HStack {
+                        Text("🏅 Badges")
                             .font(.headline)
-                        Text("Duration: \(formatDuration(session.duration))")
-                        Text("Points: \(session.points)")
-                        Text("Start: \(session.formattedStartTime)")
+                        Spacer()
                     }
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(10)
+
+                    Text(sessionVM.sessionHistory.flatMap { $0.badges }.joined(separator: " "))
+                        .font(.system(size: 36))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(Color.yellow.opacity(0.1))
+                        .cornerRadius(12)
+                }
+
+                VStack(spacing: 16) {
+                    HStack {
+                        Text("🕓 Recent Sessions")
+                            .font(.headline)
+                        Spacer()
+                    }
+
+                    ForEach(sessionVM.sessionHistory) { session in
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text(session.mode.displayName)
+                                    .font(.headline)
+                                Spacer()
+                                Text(formatDuration(session.duration))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Text("Points Earned: \(session.points)")
+                                .font(.subheadline)
+
+                            Text("Start Time: \(session.formattedStartTime)")
+                                .font(.caption2)
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+                        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    }
                 }
             }
             .padding()
         }
+        .background(Color(.systemGroupedBackground))
+        .scrollIndicators(.hidden)
+        .scrollBounceBehavior(.basedOnSize)
     }
 
     func formatDuration(_ duration: TimeInterval) -> String {
