@@ -56,6 +56,23 @@ struct HomeView: View {
                             .foregroundColor(.secondary)
                     }
                     .padding(.top, 15)
+                    
+                    HStack(spacing: 20) {
+                             statCard(
+                                 title: "Total Points",
+                                 value: "\(sessionVM.sessionHistory.reduce(0) { $0 + $1.points })",
+                                 icon: "star.fill",
+                                 color: .yellow
+                             )
+                             
+                             statCard(
+                                 title: "Sessions",
+                                 value: "\(sessionVM.sessionHistory.count)",
+                                 icon: "clock.fill",
+                                 color: .blue
+                             )
+                         }
+                    
                     VStack(spacing: 20) {
                         Text("Choose Your Focus Mode")
                             .font(.title3.bold())

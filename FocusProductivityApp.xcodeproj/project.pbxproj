@@ -16,6 +16,16 @@
 			path = FocusProductivityApp;
 			sourceTree = "<group>";
 		};
+		6A7F31B52DB4DFFD004A95A5 /* CDModels */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CDModels;
+			sourceTree = "<group>";
+		};
+		6A7F31B72DB4E03F004A95A5 /* CDHelper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CDHelper;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +42,8 @@
 		6A1712F92DB4B68D00A9EF19 = {
 			isa = PBXGroup;
 			children = (
+				6A7F31B72DB4E03F004A95A5 /* CDHelper */,
+				6A7F31B52DB4DFFD004A95A5 /* CDModels */,
 				6A1713042DB4B68D00A9EF19 /* FocusProductivityApp */,
 				6A1713032DB4B68D00A9EF19 /* Products */,
 			);
@@ -62,6 +74,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				6A1713042DB4B68D00A9EF19 /* FocusProductivityApp */,
+				6A7F31B52DB4DFFD004A95A5 /* CDModels */,
+				6A7F31B72DB4E03F004A95A5 /* CDHelper */,
 			);
 			name = FocusProductivityApp;
 			packageProductDependencies = (

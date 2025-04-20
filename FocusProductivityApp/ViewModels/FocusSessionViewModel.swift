@@ -15,11 +15,18 @@ class FocusSessionViewModel: ObservableObject {
     @Published var badges: [String] = []
     @Published var timerText: String = "00:00"
     @Published var sessionHistory: [FocusSession] = []
+    
+    init (){
+        sessionHistory = FocusSessionDataManager.shared.getAllSessions()
+    }
 
     private var timer: Timer?
     private let badgeOptions = ["🌵", "🎄", "🌲", "🌳", "🌴", "🍂", "🍁", "🍄", "🐅", "🦅", "🐵", "🐝"]
 
     func startSession(mode: FocusMode) {
+        guard currentMode != mode else{ return }
+        stopSession()
+        timerText = "00:00"
         currentMode = mode
         startTime = Date()
         elapsedTime = 0
@@ -35,6 +42,7 @@ class FocusSessionViewModel: ObservableObject {
         sessionHistory.insert(session, at: 0)
         currentMode = nil
         elapsedTime = 0
+        FocusSessionDataManager.shared.createSession(focusSession: session)
     }
 
     private func startTimer() {
