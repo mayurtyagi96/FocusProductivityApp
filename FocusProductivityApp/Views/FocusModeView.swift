@@ -71,10 +71,17 @@ struct FocusModeView: View {
                             lineWidth: 6
                         )
                         .frame(width: 220, height: 220)
+                        .overlay {
+                            Text(sessionVM.timerText)
+                                .font(.system(size: 58, weight: .heavy, design: .rounded))
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
+                                .allowsTightening(true)
+                                .padding(.horizontal, 4)
+                                
+                        }
                     
-                    Text(sessionVM.timerText)
-                        .font(.system(size: 58, weight: .heavy, design: .rounded))
-                        .foregroundColor(.primary)
                 }
                 
                 VStack(spacing: 20) {
