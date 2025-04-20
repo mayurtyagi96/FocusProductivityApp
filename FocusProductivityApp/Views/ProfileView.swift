@@ -14,9 +14,9 @@ struct ProfileView: View {
         ScrollView {
             VStack(spacing: 28) {
                 VStack(spacing: 12) {
-                    Image(systemName: sessionVM.profile.image)
+                    Image(sessionVM.profile.image)
                         .resizable()
-                        .scaledToFit()
+                        .scaledToFill()
                         .frame(width: 120, height: 120)
                         .clipShape(Circle())
                         .background(Circle().fill(Color.blue.opacity(0.2)))

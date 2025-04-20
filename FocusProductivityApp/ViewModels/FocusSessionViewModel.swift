@@ -22,7 +22,7 @@ class FocusSessionViewModel: ObservableObject {
         if let profile = ProfileDataManager.shared.getProfile(){
             self.profile = profile
         }else{
-            let newProfile = Profile(name: "Mayur Kant Tyagi", image: "person.circle")
+            let newProfile = Profile(name: "Mayur Kant Tyagi", image: "mayur")
             self.profile = newProfile
             ProfileDataManager.shared.createProfile(profile: newProfile)
         }
