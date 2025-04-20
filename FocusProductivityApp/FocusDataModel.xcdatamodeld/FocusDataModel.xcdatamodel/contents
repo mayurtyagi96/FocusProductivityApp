@@ -8,4 +8,8 @@
         <attribute name="sessionID" optional="YES" attributeType="String"/>
         <attribute name="startTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
+    <entity name="ProfileCDModel" representedClassName="ProfileCDModel" syncable="YES">
+        <attribute name="profilePic" optional="YES" attributeType="String"/>
+        <attribute name="userName" optional="YES" attributeType="String"/>
+    </entity>
 </model>

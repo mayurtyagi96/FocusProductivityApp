@@ -15,9 +15,17 @@ class FocusSessionViewModel: ObservableObject {
     @Published var badges: [String] = []
     @Published var timerText: String = "00:00"
     @Published var sessionHistory: [FocusSession] = []
+    @Published var profile: Profile
     
     init (){
         sessionHistory = FocusSessionDataManager.shared.getAllSessions()
+        if let profile = ProfileDataManager.shared.getProfile(){
+            self.profile = profile
+        }else{
+            let newProfile = Profile(name: "Mayur Kant Tyagi", image: "person.circle")
+            self.profile = newProfile
+            ProfileDataManager.shared.createProfile(profile: newProfile)
+        }
     }
 
     private var timer: Timer?

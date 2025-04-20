@@ -9,14 +9,12 @@ import SwiftUI
 
 struct ProfileView: View {
     @ObservedObject var sessionVM: FocusSessionViewModel
-    let userName = "Mayur Kant Tyagi"
-    let userImage = "person.circle"
 
     var body: some View {
         ScrollView {
             VStack(spacing: 28) {
                 VStack(spacing: 12) {
-                    Image(systemName: userImage)
+                    Image(systemName: sessionVM.profile.image)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 120, height: 120)
@@ -24,7 +22,7 @@ struct ProfileView: View {
                         .background(Circle().fill(Color.blue.opacity(0.2)))
                         .padding(.top)
 
-                    Text(userName)
+                    Text(sessionVM.profile.name)
                         .font(.title.bold())
 
                     Text("Total Points: \(sessionVM.sessionHistory.reduce(0) { $0 + $1.points })")
