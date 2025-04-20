@@ -10,6 +10,7 @@ import SwiftUI
 struct FocusModeView: View {
     let mode: FocusMode
     @ObservedObject var sessionVM: FocusSessionViewModel
+    @State private var shouldDisable = false
 
     var body: some View {
         ZStack {
@@ -106,6 +107,7 @@ struct FocusModeView: View {
                 
                 Button(action: {
                     sessionVM.stopSession()
+                    shouldDisable = true
                 }) {
                     Text("Stop Focusing")
                         .font(.headline)
@@ -119,9 +121,11 @@ struct FocusModeView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
+                        .opacity(shouldDisable ? 0.5 : 1)
                         .cornerRadius(20)
                         .shadow(color: .red.opacity(0.3), radius: 8, x: 0, y: 4)
                 }
+                .disabled(shouldDisable)
             }
             .padding(24)
         }
