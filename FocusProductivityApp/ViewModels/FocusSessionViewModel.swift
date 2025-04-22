@@ -17,22 +17,38 @@ class FocusSessionViewModel: ObservableObject {
     @Published var sessionHistory: [FocusSession] = []
     @Published var profile: Profile
     
-    init (){
+    // Keys for UserDefaults
+    private let activeSessionKey = "activeSession"
+    private let startTimeKey = "sessionStartTime"
+    private let modeKey = "sessionMode"
+    private let pointsKey = "sessionPoints"
+    private let badgesKey = "sessionBadges"
+    private let lastRewardTimeKey = "lastRewardTime"
+    
+    init() {
         sessionHistory = FocusSessionDataManager.shared.getAllSessions()
-        if let profile = ProfileDataManager.shared.getProfile(){
+        if let profile = ProfileDataManager.shared.getProfile() {
             self.profile = profile
-        }else{
+        } else {
             let newProfile = Profile(name: "Mayur Kant Tyagi", image: "mayur")
             self.profile = newProfile
             ProfileDataManager.shared.createProfile(profile: newProfile)
         }
+        
+        // Restore active session if app was relaunched
+        restoreActiveSession()
+    }
+    
+    deinit {
+        timer?.invalidate()
     }
 
     private var timer: Timer?
     private let badgeOptions = ["🌵", "🎄", "🌲", "🌳", "🌴", "🍂", "🍁", "🍄", "🐅", "🦅", "🐵", "🐝"]
+    private var lastRewardTime: Int = 0
 
     func startSession(mode: FocusMode) {
-        guard currentMode != mode else{ return }
+        guard currentMode != mode else { return }
         stopSession()
         timerText = "00:00"
         currentMode = mode
@@ -40,18 +56,27 @@ class FocusSessionViewModel: ObservableObject {
         elapsedTime = 0
         points = 0
         badges = []
+        lastRewardTime = 0
         startTimer()
+        
+        // Save active session state
+        saveActiveSessionState()
     }
 
     func stopSession() {
         timer?.invalidate()
         lastRewardTime = 0
+        
         guard let start = startTime, let mode = currentMode else { return }
         let session = FocusSession(mode: mode, startTime: start, duration: elapsedTime, points: points, badges: badges)
         sessionHistory.insert(session, at: 0)
         currentMode = nil
+        startTime = nil
         elapsedTime = 0
         FocusSessionDataManager.shared.createSession(focusSession: session)
+        
+        // Clear active session state
+        clearActiveSessionState()
     }
 
     private func startTimer() {
@@ -59,8 +84,6 @@ class FocusSessionViewModel: ObservableObject {
             self.updateTimer()
         }
     }
-
-    private var lastRewardTime: Int = 0
 
     private func updateTimer() {
         guard let start = startTime else { return }
@@ -81,6 +104,87 @@ class FocusSessionViewModel: ObservableObject {
             }
 
             lastRewardTime = (currentSeconds / 120) * 120
+            
+            // Update active session state whenever rewards are given
+            saveActiveSessionState()
+        }
+    }
+    
+    // MARK: - App Relaunch Functionality
+    
+    private func saveActiveSessionState() {
+        let defaults = UserDefaults.standard
+        
+        if let mode = currentMode, let start = startTime {
+            defaults.set(true, forKey: activeSessionKey)
+            defaults.set(start, forKey: startTimeKey)
+            defaults.set(mode.rawValue, forKey: modeKey) // Assuming FocusMode is an enum with raw values
+            defaults.set(points, forKey: pointsKey)
+            defaults.set(badges, forKey: badgesKey)
+            defaults.set(lastRewardTime, forKey: lastRewardTimeKey)
+        }
+    }
+    
+    private func clearActiveSessionState() {
+        let defaults = UserDefaults.standard
+        defaults.set(false, forKey: activeSessionKey)
+        defaults.removeObject(forKey: startTimeKey)
+        defaults.removeObject(forKey: modeKey)
+        defaults.removeObject(forKey: pointsKey)
+        defaults.removeObject(forKey: badgesKey)
+        defaults.removeObject(forKey: lastRewardTimeKey)
+    }
+    
+    private func restoreActiveSession() {
+        let defaults = UserDefaults.standard
+        
+        // Check if there was an active session
+        guard defaults.bool(forKey: activeSessionKey),
+              let savedStartTime = defaults.object(forKey: startTimeKey) as? Date,
+              let modeRawValue = defaults.string(forKey: modeKey),
+              let mode = FocusMode(rawValue: modeRawValue) else {
+            return
+        }
+        
+        // Restore session state
+        startTime = savedStartTime
+        currentMode = mode
+        points = defaults.integer(forKey: pointsKey)
+        badges = defaults.stringArray(forKey: badgesKey) ?? []
+        lastRewardTime = defaults.integer(forKey: lastRewardTimeKey)
+        
+        // Calculate elapsed time accounting for the time the app was closed
+        elapsedTime = Date().timeIntervalSince(savedStartTime)
+        
+        // Update timer text
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .positional
+        formatter.zeroFormattingBehavior = .pad
+        formatter.allowedUnits = elapsedTime >= 3600 ? [.hour, .minute, .second] : [.minute, .second]
+        timerText = formatter.string(from: elapsedTime) ?? "00:00"
+        
+        // Restart timer
+        startTimer()
+        
+        // Calculate rewards that should have been earned while app was closed
+        let currentSeconds = Int(elapsedTime)
+        let missedRewardIntervals = (currentSeconds - lastRewardTime) / 120
+        
+        if missedRewardIntervals > 0 {
+            points += missedRewardIntervals
+            
+            // Add missed badges
+            for _ in 0..<missedRewardIntervals {
+                if let badge = badgeOptions.randomElement() {
+                    badges.append(badge)
+                }
+            }
+            
+            // Update last reward time
+            lastRewardTime = (currentSeconds / 120) * 120
+            
+            // Save updated state
+            saveActiveSessionState()
         }
     }
 }
