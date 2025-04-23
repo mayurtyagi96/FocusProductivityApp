@@ -10,6 +10,8 @@ import SwiftUI
 struct HomeView: View {
     @ObservedObject var sessionVM: FocusSessionViewModel
     @State private var animateGradient = false
+    @State private var shouldNavigate = false
+    @State private var navigateToMode = FocusMode.work
     
     var body: some View {
         ZStack {
@@ -114,7 +116,14 @@ struct HomeView: View {
             .scrollBounceBehavior(.basedOnSize)
             
         }
+        .navigationDestination(isPresented: $shouldNavigate, destination: {
+            FocusModeView(mode: navigateToMode, sessionVM: sessionVM)
+        })
         .onAppear {
+            if UserDefaults.standard.bool(forKey: "activeSession") == true{
+                shouldNavigate = true
+                navigateToMode = FocusMode(rawValue: (UserDefaults.standard.string(forKey: "sessionMode") ?? "work")) ?? .work
+            }
             withAnimation(Animation.linear(duration: 7).repeatForever(autoreverses: true)) {
                 animateGradient.toggle()
             }
@@ -129,7 +138,10 @@ struct HomeView: View {
             spacing: 16
         ) {
             ForEach(FocusMode.allCases) { mode in
-                NavigationLink(destination: FocusModeView(mode: mode, sessionVM: sessionVM)) {
+                Button{
+                    shouldNavigate = true
+                    navigateToMode = mode
+                } label: {
                     VStack(spacing: 16) {
                         ZStack {
                             Circle()
