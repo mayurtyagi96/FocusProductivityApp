@@ -57,6 +57,7 @@ struct ProfileView: View {
                             HStack {
                                 Text(session.mode.displayName)
                                     .font(.headline)
+                                    .foregroundColor(.black)
                                 Spacer()
                                 Text(formatDuration(session.duration))
                                     .font(.caption)
@@ -65,6 +66,7 @@ struct ProfileView: View {
 
                             Text("Points Earned: \(session.points)")
                                 .font(.subheadline)
+                                .foregroundColor(.black)
 
                             Text("Start Time: \(session.formattedStartTime)")
                                 .font(.caption2)
