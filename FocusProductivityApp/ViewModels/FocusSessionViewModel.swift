@@ -14,6 +14,8 @@ class FocusSessionViewModel: ObservableObject {
     @Published var points: Int = 0
     @Published var badges: [String] = []
     @Published var timerText: String = "00:00"
+    
+    var currentSessions: [CurrentSessions] = []
     @Published var sessionHistory: [FocusSession] = []
     @Published var profile: Profile
     
@@ -47,17 +49,29 @@ class FocusSessionViewModel: ObservableObject {
     private var lastRewardTime: Int = 0
 
     func startSession(mode: FocusMode) {
-        guard currentMode != mode else { return }
-        stopSession()
-        timerText = "00:00"
-        currentMode = mode
-        startTime = Date()
-        elapsedTime = 0
-        points = 0
-        badges = []
-        lastRewardTime = 0
-        startTimer()
-        saveActiveSessionState()
+        if let selectedSession = currentSessions.filter({$0.currentMode == mode}).first{
+            timerText = selectedSession.timerText
+            currentMode = selectedSession.currentMode
+            startTime = selectedSession.startTime
+            elapsedTime = selectedSession.elapsedTime
+            points = selectedSession.points
+            badges = selectedSession.badges
+            lastRewardTime = selectedSession.lastRewardTime
+            startTimer()
+//            saveActiveSessionState()
+        }else{
+            timerText = "00:00"
+            currentMode = mode
+            startTime = Date()
+            elapsedTime = 0
+            points = 0
+            badges = []
+            lastRewardTime = 0
+            startTimer()
+            saveActiveSessionState()
+            let newSession = CurrentSessions(currentMode: currentMode)
+            currentSessions.append(newSession)
+        }
     }
 
     func stopSession() {
@@ -101,6 +115,18 @@ class FocusSessionViewModel: ObservableObject {
             lastRewardTime = (currentSeconds / 120) * 120
             saveActiveSessionState()
         }
+        
+        if var selectedSession = currentSessions.filter({$0.currentMode == currentMode}).first{
+            selectedSession.timerText = timerText
+            selectedSession.currentMode = currentMode
+            selectedSession.startTime = startTime
+            selectedSession.elapsedTime = elapsedTime
+            selectedSession.points = points
+            selectedSession.badges = badges
+            selectedSession.lastRewardTime = lastRewardTime
+        }
+        
+        
     }
     
     // MARK: - App Relaunch Functionality
@@ -109,7 +135,7 @@ class FocusSessionViewModel: ObservableObject {
         let defaults = UserDefaults.standard
         
         if let mode = currentMode, let start = startTime {
-            defaults.set(true, forKey: activeSessionKey)
+            defaults.set(true, forKey: activeSessionKey + "\(currentMode?.rawValue ?? "")")
             defaults.set(start, forKey: startTimeKey)
             defaults.set(mode.rawValue, forKey: modeKey)
             defaults.set(points, forKey: pointsKey)
@@ -120,7 +146,7 @@ class FocusSessionViewModel: ObservableObject {
     
     private func clearActiveSessionState() {
         let defaults = UserDefaults.standard
-        defaults.set(false, forKey: activeSessionKey)
+        defaults.set(false, forKey: activeSessionKey + "\(currentMode?.rawValue ?? "")")
         defaults.removeObject(forKey: startTimeKey)
         defaults.removeObject(forKey: modeKey)
         defaults.removeObject(forKey: pointsKey)
@@ -130,7 +156,7 @@ class FocusSessionViewModel: ObservableObject {
     
     private func restoreActiveSession() {
         let defaults = UserDefaults.standard
-        guard defaults.bool(forKey: activeSessionKey),
+        guard defaults.bool(forKey: activeSessionKey + "\(currentMode?.rawValue ?? "")"),
               let savedStartTime = defaults.object(forKey: startTimeKey) as? Date,
               let modeRawValue = defaults.string(forKey: modeKey),
               let mode = FocusMode(rawValue: modeRawValue) else {
@@ -169,5 +195,20 @@ class FocusSessionViewModel: ObservableObject {
             
             saveActiveSessionState()
         }
+    }
+}
+
+
+class CurrentSessions{
+    var currentMode: FocusMode?
+    var startTime: Date?
+    var elapsedTime: TimeInterval = 0
+    var points: Int = 0
+    var badges: [String] = []
+    var timerText: String = "00:00"
+    var lastRewardTime: Int = 0
+    
+    init(currentMode: FocusMode?) {
+        self.currentMode = currentMode
     }
 }
