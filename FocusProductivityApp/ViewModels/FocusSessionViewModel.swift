@@ -58,7 +58,7 @@ class FocusSessionViewModel: ObservableObject {
             badges = selectedSession.badges
             lastRewardTime = selectedSession.lastRewardTime
             startTimer()
-//            saveActiveSessionState()
+            saveActiveSessionState()
         }else{
             timerText = "00:00"
             currentMode = mode
@@ -116,7 +116,7 @@ class FocusSessionViewModel: ObservableObject {
             saveActiveSessionState()
         }
         
-        if var selectedSession = currentSessions.filter({$0.currentMode == currentMode}).first{
+        if let selectedSession = currentSessions.filter({$0.currentMode == currentMode}).first{
             selectedSession.timerText = timerText
             selectedSession.currentMode = currentMode
             selectedSession.startTime = startTime
@@ -136,79 +136,68 @@ class FocusSessionViewModel: ObservableObject {
         
         if let mode = currentMode, let start = startTime {
             defaults.set(true, forKey: activeSessionKey + "\(currentMode?.rawValue ?? "")")
-            defaults.set(start, forKey: startTimeKey)
-            defaults.set(mode.rawValue, forKey: modeKey)
-            defaults.set(points, forKey: pointsKey)
-            defaults.set(badges, forKey: badgesKey)
-            defaults.set(lastRewardTime, forKey: lastRewardTimeKey)
+            defaults.set(start, forKey: startTimeKey + "\(currentMode?.rawValue ?? "")")
+            defaults.set(mode.rawValue, forKey: modeKey + "\(currentMode?.rawValue ?? "")")
+            defaults.set(points, forKey: pointsKey + "\(currentMode?.rawValue ?? "")")
+            defaults.set(badges, forKey: badgesKey + "\(currentMode?.rawValue ?? "")")
+            defaults.set(lastRewardTime, forKey: lastRewardTimeKey + "\(currentMode?.rawValue ?? "")")
         }
     }
     
     private func clearActiveSessionState() {
         let defaults = UserDefaults.standard
         defaults.set(false, forKey: activeSessionKey + "\(currentMode?.rawValue ?? "")")
-        defaults.removeObject(forKey: startTimeKey)
-        defaults.removeObject(forKey: modeKey)
-        defaults.removeObject(forKey: pointsKey)
-        defaults.removeObject(forKey: badgesKey)
-        defaults.removeObject(forKey: lastRewardTimeKey)
+        defaults.removeObject(forKey: startTimeKey + "\(currentMode?.rawValue ?? "")")
+        defaults.removeObject(forKey: modeKey + "\(currentMode?.rawValue ?? "")")
+        defaults.removeObject(forKey: pointsKey + "\(currentMode?.rawValue ?? "")")
+        defaults.removeObject(forKey: badgesKey + "\(currentMode?.rawValue ?? "")")
+        defaults.removeObject(forKey: lastRewardTimeKey + "\(currentMode?.rawValue ?? "")")
     }
     
     private func restoreActiveSession() {
         let defaults = UserDefaults.standard
-        guard defaults.bool(forKey: activeSessionKey + "\(currentMode?.rawValue ?? "")"),
-              let savedStartTime = defaults.object(forKey: startTimeKey) as? Date,
-              let modeRawValue = defaults.string(forKey: modeKey),
-              let mode = FocusMode(rawValue: modeRawValue) else {
-            return
-        }
-        
-        startTime = savedStartTime
-        currentMode = mode
-        points = defaults.integer(forKey: pointsKey)
-        badges = defaults.stringArray(forKey: badgesKey) ?? []
-        lastRewardTime = defaults.integer(forKey: lastRewardTimeKey)
-        
-        elapsedTime = Date().timeIntervalSince(savedStartTime)
-        
-        let formatter = DateComponentsFormatter()
-        formatter.unitsStyle = .positional
-        formatter.zeroFormattingBehavior = .pad
-        formatter.allowedUnits = elapsedTime >= 3600 ? [.hour, .minute, .second] : [.minute, .second]
-        timerText = formatter.string(from: elapsedTime) ?? "00:00"
-        
-        startTimer()
-        
-        let currentSeconds = Int(elapsedTime)
-        let missedRewardIntervals = (currentSeconds - lastRewardTime) / 120
-        
-        if missedRewardIntervals > 0 {
-            points += missedRewardIntervals
+        for session in FocusMode.allCases {
+            guard defaults.bool(forKey: activeSessionKey + session.rawValue),
+                  let savedStartTime = defaults.object(forKey: startTimeKey + session.rawValue) as? Date,
+                  let modeRawValue = defaults.string(forKey: modeKey + session.rawValue),
+                  let mode = FocusMode(rawValue: modeRawValue) else {
+                continue
+            }
+            let newSession = CurrentSessions(currentMode: mode)
             
-            for _ in 0..<missedRewardIntervals {
-                if let badge = badgeOptions.randomElement() {
-                    badges.append(badge)
+            newSession.startTime = savedStartTime
+            newSession.currentMode = mode
+            newSession.points = defaults.integer(forKey: pointsKey + "\(currentMode?.rawValue ?? "")")
+            newSession.badges = defaults.stringArray(forKey: badgesKey + "\(currentMode?.rawValue ?? "")") ?? []
+            newSession.lastRewardTime = defaults.integer(forKey: lastRewardTimeKey + "\(currentMode?.rawValue ?? "")")
+            newSession.elapsedTime = Date().timeIntervalSince(savedStartTime)
+            
+            let formatter = DateComponentsFormatter()
+            formatter.unitsStyle = .positional
+            formatter.zeroFormattingBehavior = .pad
+            formatter.allowedUnits = newSession.elapsedTime >= 3600 ? [.hour, .minute, .second] : [.minute, .second]
+            newSession.timerText = formatter.string(from: newSession.elapsedTime) ?? "00:00"
+    
+            startTimer()
+            
+            let currentSeconds = Int(newSession.elapsedTime)
+            let missedRewardIntervals = (currentSeconds - newSession.lastRewardTime) / 120
+
+            if missedRewardIntervals > 0 {
+                newSession.points += missedRewardIntervals
+                
+                for _ in 0..<missedRewardIntervals {
+                    if let badge = badgeOptions.randomElement() {
+                        newSession.badges.append(badge)
+                    }
                 }
+                
+                newSession.lastRewardTime = (currentSeconds / 120) * 120
+                
+                saveActiveSessionState()
             }
             
-            lastRewardTime = (currentSeconds / 120) * 120
-            
-            saveActiveSessionState()
+            currentSessions.append(newSession)
         }
-    }
-}
-
-
-class CurrentSessions{
-    var currentMode: FocusMode?
-    var startTime: Date?
-    var elapsedTime: TimeInterval = 0
-    var points: Int = 0
-    var badges: [String] = []
-    var timerText: String = "00:00"
-    var lastRewardTime: Int = 0
-    
-    init(currentMode: FocusMode?) {
-        self.currentMode = currentMode
     }
 }
